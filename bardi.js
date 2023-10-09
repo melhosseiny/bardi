@@ -1,6 +1,5 @@
 import "https://unpkg.com/commonmark@0.30.0/dist/commonmark.js";
 import { Transform } from "./transform.js";
-import katex from "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.mjs";
 import { renderMath } from "./auto-render.js";
 
 const { ASSET_HOST } = JSON.parse(await Deno.readTextFile("bardi.json"));
