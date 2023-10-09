@@ -1,3 +1,9 @@
+/**
+ * Content management system for warm-dawn
+ *
+ * @module
+ */
+
 import "https://unpkg.com/commonmark@0.30.0/dist/commonmark.js";
 import { Transform } from "./transform.js";
 import { renderMath } from "./auto-render.js";
@@ -93,7 +99,7 @@ const compile_note = async (slug, text) => {
  * @param slug note id
  * @param text note md content
  */
-const index_note = async (slug, text) => {
+async function index_note(slug, text) => {
   const [parsed, name, img, tags] = parse_markdown(text);
   const rendered = writer.render(parsed);
   const html = tags.includes("math") ? renderMath(rendered) : rendered;
