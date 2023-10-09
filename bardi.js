@@ -84,6 +84,15 @@ const compile_note = async (slug, text) => {
   await Deno.writeTextFile(`${slug}.html`, html);
 }
 
+
+/**
+ * Indexes a new note or reindexes an existing one.
+ *
+ * Does not sort after indexing, so `index.json` needs to be sorted using `bardi sort`.
+ *
+ * @param slug note id
+ * @param text note md content
+ */
 const index_note = async (slug, text) => {
   const [parsed, name, img, tags] = parse_markdown(text);
   const rendered = writer.render(parsed);
