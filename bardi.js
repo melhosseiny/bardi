@@ -99,7 +99,7 @@ const compile_note = async (slug, text) => {
  * @param slug note id
  * @param text note md content
  */
-async function index_note(slug, text) => {
+async function index_note(slug, text) {
   const [parsed, name, img, tags] = parse_markdown(text);
   const rendered = writer.render(parsed);
   const html = tags.includes("math") ? renderMath(rendered) : rendered;
