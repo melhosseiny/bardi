@@ -1,5 +1,5 @@
 /**
- * Content management system for warm-dawn
+ * Content management system for warm-dawn.
  *
  * This module is used as a cli.
  *

@@ -10,13 +10,8 @@ const renderMathInText = function(text, optionsCopy) {
         // the current text node with a new one.
         return null;
     }
-    
-    console.log(data);
 
     const rendered = data.map(part => part.type === "math" ? katex.renderToString(part.data, Object.assign({}, optionsCopy, { displayMode: part.display })) : part.data);
-    
-    console.log('####');
-    console.log(rendered);
     
     return rendered.join('\n');
 };
