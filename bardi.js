@@ -1,8 +1,25 @@
 /**
  * Content management system for warm-dawn
  *
+ * This module is used as a cli.
+ *
+ * ```shell
+ * > # index a note
+ * > bardi index note-23.md
+ * > # show help
+ * > bardi --help
+ * ```
+ *
+ * To install:
+ *
+ * ```shell
+ * > # install
+ * > deno install --allow-net --allow-read --allow-write bardi.js
+ * ```
+ *
  * @module
  */
+import { parse } from "https://deno.land/std@0.203.0/flags/mod.ts";
 
 import "https://unpkg.com/commonmark@0.30.0/dist/commonmark.js";
 import { Transform } from "./transform.js";
@@ -16,6 +33,12 @@ const transform = Transform();
 
 let index = [];
 
+/**
+ * Parses markdown to AST, making transformations.
+ *
+ * @param markdown md content
+ * @return AST and metadata (name, image, and title)
+ */
 const parse_markdown = function(markdown) {
   let parsed = reader.parse(markdown);
   var walker = parsed.walker();
@@ -76,6 +99,12 @@ const parse_markdown = function(markdown) {
   return [parsed, name, img, tags];
 }
 
+/**
+ * Finds a note in the index by id.
+ *
+ * @param slug note id
+ * @return note metadata and array index
+ */
 const find_note_in_index_by_id = async (slug) => {
   const index = JSON.parse(await Deno.readTextFile("index.json"));
   const note_meta = index.find(note => note.id === slug);
@@ -83,13 +112,18 @@ const find_note_in_index_by_id = async (slug) => {
   return [note_meta, note_index];
 }
 
+/**
+ * Converts markdown to HTML, without indexing.
+ *
+ * @param slug note id
+ * @param text note md content
+ */
 const compile_note = async (slug, text) => {
   const [parsed, name, img, tags] = parse_markdown(text);
   const rendered = writer.render(parsed);
   const html = tags && tags.includes("math") ? renderMath(rendered) : rendered;
   await Deno.writeTextFile(`${slug}.html`, html);
 }
-
 
 /**
  * Indexes a new note or reindexes an existing one.
@@ -99,7 +133,7 @@ const compile_note = async (slug, text) => {
  * @param slug note id
  * @param text note md content
  */
-async function index_note(slug, text) {
+const index_note = async (slug, text) => {
   const [parsed, name, img, tags] = parse_markdown(text);
   const rendered = writer.render(parsed);
   const html = tags.includes("math") ? renderMath(rendered) : rendered;
@@ -119,11 +153,18 @@ async function index_note(slug, text) {
   if (note_index === -1) {
     index.push(note);
   } else {
-    index[note_index] = note; // re index if exists
+    index[note_index] = Object.assign({}, index[note_index] , {
+      name: note.name,
+      img: note.img,
+      tags: note.tags
+    }); // re index if exists without modifying id or time
   }
   Deno.writeTextFileSync("index.json", JSON.stringify(index));
 }
 
+/**
+ * Removes all markdown and HTML files.
+ */
 const remove_notes = () => {
   for (const entry of Deno.readDirSync('.')) {
     if (entry.name.endsWith(".md") || entry.name.endsWith(".html")) {
@@ -135,9 +176,21 @@ const remove_notes = () => {
 
 const main = async () => {
   console.log(Deno.args);
+  console.log(parse(Deno.args));
   
-  const [command, target] = [Deno.args[0], Deno.args[1]];
+  const args = parse(Deno.args, {
+    alias: {
+      h: "help"
+    }
+  });
+  
+  const [command, target] = args._;
   const slug = target ? target.endsWith(".md") ? target.replace(".md", '') : target : undefined;
+  
+  if (args.help) {
+    print_usage();
+    Deno.exit();
+  }
   
   switch (command) {
     // index note-23.md
@@ -165,6 +218,20 @@ const main = async () => {
       index.sort((a, b) => new Date(b.time) - new Date(a.time));
       await Deno.writeTextFile("index.json", JSON.stringify(index));
   }
+}
+
+const print_usage = () => {
+  console.log(`Content management system for warm-dawn.
+
+INSTALL:
+  deno install --allow-net --allow-read --allow-write bardi.js
+
+USAGE:
+  bardi [command] [target] [options]
+
+OPTIONS:
+  -h, --help            Prints help information
+  `);
 }
 
 if (import.meta.main) {
